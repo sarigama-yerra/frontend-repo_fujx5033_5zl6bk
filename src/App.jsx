@@ -1,71 +1,70 @@
+import { useState } from 'react'
+import Navbar from './components/Navbar'
+import Hero from './components/Hero'
+import Products from './components/Products'
+import Library from './components/Library'
+import About from './components/About'
+import Footer from './components/Footer'
+import CartSheet from './components/CartSheet'
+
 function App() {
+  const [cartOpen, setCartOpen] = useState(false)
+  const [cart, setCart] = useState([])
+  const [busy, setBusy] = useState(false)
+
+  const addToCart = (item) => {
+    setCart((c) => [...c, item])
+    setCartOpen(true)
+  }
+
+  const removeFromCart = (idx) => setCart((c) => c.filter((_, i) => i !== idx))
+
+  const checkout = async () => {
+    try {
+      setBusy(true)
+      const base = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
+      const payload = {
+        email: 'demo@example.com',
+        items: cart.map((c) => ({ product_id: c.id || '', title: c.title, price: c.price, quantity: 1 })),
+        total: cart.reduce((s, it) => s + (it.price || 0), 0)
+      }
+      const res = await fetch(`${base}/api/order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      const data = await res.json()
+      if (res.ok) {
+        alert(`Success! ${data.message}`)
+        setCart([])
+        setCartOpen(false)
+      } else {
+        alert(`Checkout failed: ${data.detail || 'unknown error'}`)
+      }
+    } catch (e) {
+      alert(`Request error: ${e.message}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Subtle pattern overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_50%)]"></div>
+    <div className="min-h-screen bg-slate-900">
+      <Navbar onOpenCart={() => setCartOpen(true)} />
+      <Hero />
+      <Products onAdd={addToCart} />
+      <Library />
+      <About />
+      <Footer />
 
-      <div className="relative min-h-screen flex items-center justify-center p-8">
-        <div className="max-w-2xl w-full">
-          {/* Header with Flames icon */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center mb-6">
-              <img
-                src="/flame-icon.svg"
-                alt="Flames"
-                className="w-24 h-24 drop-shadow-[0_0_25px_rgba(59,130,246,0.5)]"
-              />
-            </div>
-
-            <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
-              Flames Blue
-            </h1>
-
-            <p className="text-xl text-blue-200 mb-6">
-              Build applications through conversation
-            </p>
-          </div>
-
-          {/* Instructions */}
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-8 shadow-xl mb-6">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold">
-                1
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">Describe your idea</h3>
-                <p className="text-blue-200/80 text-sm">Use the chat panel on the left to tell the AI what you want to build</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 mb-6">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold">
-                2
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">Watch it build</h3>
-                <p className="text-blue-200/80 text-sm">Your app will appear in this preview as the AI generates the code</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold">
-                3
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">Refine and iterate</h3>
-                <p className="text-blue-200/80 text-sm">Continue the conversation to add features and make changes</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="text-center">
-            <p className="text-sm text-blue-300/60">
-              No coding required • Just describe what you want
-            </p>
-          </div>
-        </div>
-      </div>
+      <CartSheet
+        open={cartOpen}
+        items={cart}
+        onClose={() => setCartOpen(false)}
+        onRemove={removeFromCart}
+        onCheckout={checkout}
+        busy={busy}
+      />
     </div>
   )
 }
