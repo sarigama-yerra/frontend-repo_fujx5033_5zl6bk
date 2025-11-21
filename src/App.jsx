@@ -6,6 +6,7 @@ import Library from './components/Library'
 import About from './components/About'
 import Footer from './components/Footer'
 import CartSheet from './components/CartSheet'
+import BackgroundFX from './components/BackgroundFX'
 
 function App() {
   const [cartOpen, setCartOpen] = useState(false)
@@ -49,12 +50,20 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-slate-950 text-slate-100">
+      <BackgroundFX />
       <Navbar onOpenCart={() => setCartOpen(true)} />
       <Hero />
-      <Products onAdd={addToCart} />
-      <Library />
-      <About />
+      {/* Sections flow with brighter, continuous gradients */}
+      <div className="bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent">
+        <Products onAdd={addToCart} />
+      </div>
+      <div className="bg-gradient-to-b from-transparent via-violet-500/5 to-transparent">
+        <Library />
+      </div>
+      <div className="bg-gradient-to-b from-transparent via-emerald-400/5 to-transparent">
+        <About />
+      </div>
       <Footer />
 
       <CartSheet
